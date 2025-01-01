@@ -1,0 +1,291 @@
+\makenomenclature
+\nomenclature{$\mathcal{J}$}{cost function}
+\nomenclature{$\mathcal{I}$}{integrand of cost function}
+\nomenclature{$\delta \mathbf{q}$}{system perturbations}
+\nomenclature{$\mathbf{q}$}{state}
+\nomenclature{$\mathbf{c}$}{control vector}
+\nomenclature{$\mathcal{V}$}{spatial domain volume}
+\nomenclature{$\mathcal{T}$}{temporal domain}
+\nomenclature{$\mathcal{M}$}{measurement kernel}
+\nomenclature{$\mathcal{N}$}{forward conservation equations}
+\nomenclature{$\mathcal{N}^\dagger$}{adjoint equations}
+\nomenclature{$p_m$}{discrete measurement}
+\nomenclature{$\delta p_m$}{measurement perturbations}
+\nomenclature{$t_m$}{measurement time}
+\nomenclature{$\mathbf{x}_m$}{measurement location}
+\nomenclature{$()_{tr}$}{true state}
+\nomenclature{$\epsilon$}{error between the adjoint prediction and finite-difference of forward system}
+\nomenclature{$\langle \cdot \rangle$}{Space-time inner product}
+\printnomenclature
+\vspace{-6pt}
+
+\section{Formulation}\label{s:dod}
+\subsection{General formulation}
+The following formulation shows how to compute the sensitivity of a cost function using the adjoint field. A similar formulation is found in \cite{freund2011adjoint}. The cost to optimize is
+\begin{equation}
+\mathcal{J} = {\int}_\mathcal{\!\!T} {\int}_\mathcal{\!\!V} \mathcal{I}(\mathbf{q}(\mathbf{c}),\mathbf{c})\,d\mathcal{V} d\mathcal{T},
+\end{equation}
+where the integrand $\mathcal{I}$ is positive definite, e.g. often a squared quantity, which depends on the state $\mathbf{q}$ and the control vector $\mathbf{c}$.  Notice the state itself depends on the $\mathbf{c}$.  In variational-based approaches, the first order variation of $\mathcal{J}$ is considered:
+\begin{equation}
+    \delta \mathcal{J} = {\int}_\mathcal{\!\!T} {\int}_\mathcal{\!\!V}\left[ \frac{\partial \mathcal{I}}{\partial \mathbf{q}} \delta \mathbf{q}+\frac{\partial \mathcal{I}}{\partial \mathbf{c}} \delta \mathbf{c}\right]\,d\mathcal{V} d\mathcal{T}.
+\end{equation}
+As mentioned previously, the crux of the problem is that a $\delta \mathbf{c}$ can change $\mathcal{I}$ directly or indirectly by inducing a change to the state $\delta \mathbf{q}$. So, for every $\delta \mathbf{c}$, a new flow state $\mathbf{q}$ must be calculated in order to compute $\mathcal{J}$, which is often prohibitive. To mitigate having to recompute $\delta \mathbf{q}$, zero is subtracted from the previous expression by 
+\begin{equation}\label{eq:varJ}
+    \delta \mathcal{J} = {\int}_\mathcal{\!\!T} {\int}_\mathcal{\!\!V}\left[ \frac{\partial \mathcal{I}}{\partial \mathbf{q}} \delta \mathbf{q}+\frac{\partial \mathcal{I}}{\partial \mathbf{c}} \delta \mathbf{c} - 0\right]\,d\mathcal{V} d\mathcal{T}
+\end{equation}
+\textit{What does `0' represent in (\ref{eq:varJ})?} Exploiting the governing conservation equations
+\begin{equation}
+    \mathcal{N}(\mathbf{q},\mathbf{c})=0,
+\end{equation}
+and noticing that the variation of conservation equations is
+\begin{equation}\label{eq:varM}
+    \delta \mathcal{N}(\mathbf{q},\mathbf{c})= \frac{\partial \mathcal{N}}{\partial \mathbf{q}}\delta \mathbf{q} + \frac{\partial \mathcal{N}}{\partial \mathbf{c}}\delta \mathbf{c} = 0
+\end{equation}
+because $\delta 0=0$. Furthermore (\ref{eq:varM}) also holds when it is multiplied by a vector field $\mathbf{q}^\dagger$
+\begin{equation}
+    \mathbf{q}^\dagger\delta \mathcal{N}(\mathbf{q},\mathbf{c})= \mathbf{q}^\dagger\frac{\partial \mathcal{N}}{\partial \mathbf{q}}\delta \mathbf{q} + \mathbf{q}^\dagger\frac{\partial \mathcal{N}}{\partial \mathbf{c}}\delta \mathbf{c} = 0.
+\end{equation}
+The field $\mathbf{q}^\dagger$ can thus be regarded as a Lagrange multiplier, and it is often called the adjoint field.
+Next, the `zero' term is directly substituted in (\ref{eq:varJ}) and grouping terms yields
+\begin{equation}\label{eq:varJlong}
+\delta \mathcal{J} = {\int}_\mathcal{\!\!T} {\int}_\mathcal{\!\!V}\left[ \left( \frac{\partial \mathcal{I}}{\partial \mathbf{q}}  - \mathbf{q}^\dagger \frac{\partial \mathcal{N}}{\partial \mathbf{q}} \right) \delta \mathbf{q}+\left(\frac{\partial \mathcal{I}}{\partial \mathbf{c}}  -\mathbf{q}^\dagger\frac{\partial \mathcal{N}}{\partial \mathbf{c}} \right) \delta \mathbf{c} \right]\,d\mathcal{V} d\mathcal{T}.
+\end{equation}
+By observation, the expression looks more complicated. However, the $\mathbf{q}^\dagger$ can be chosen to greatly simplify the expression.  Recall that computing $\mathcal{J}$ depended on calculating $\delta \mathbf{q}$ for every $\delta \mathbf{c}$ which is problematic.  In order to eliminate this pesky $\delta \mathbf{q}$ dependence in (\ref{eq:varJlong}), consider an adjoint field that solves the system
+\begin{equation}\label{eq:adjointbeforeIBP}
+ \left( \frac{\partial \mathcal{I}}{\partial \mathbf{q}}  - \mathbf{q}^\dagger \frac{\partial \mathcal{N}}{\partial \mathbf{q}} \right) \delta \mathbf{q}=0.
+\end{equation}
+The adjoint equations are determined by performing integration by parts of the first group of terms in (\ref{eq:varJlong}). Notice that the adjoint equations (once formulated) will be forced by the linearization of the cost-functional integrand $\partial \mathcal{I}/\partial \mathbf{q}$. The expression for the $\delta \mathcal{J}$ then simplifies to
+\begin{equation}\label{eq:sensitivity}
+    \delta \mathcal{J} = {\int}_\mathcal{\!\!T} {\int}_\mathcal{\!\!V}\left[ \left(\frac{\partial \mathcal{I}}{\partial \mathbf{c}}  -\mathbf{q}^\dagger\frac{\partial \mathcal{N}}{\partial \mathbf{c}} \right) \delta \mathbf{c} \right]\,d\mathcal{V} d\mathcal{T}.
+\end{equation}
+\textit{What are the important features (\ref{eq:sensitivity})?} The sensitivity can be obtained for \textit{any} list of $\mathbf{c}$; the computational cost is independent of the size of the control vector! Also, two terms comprise the sensitivity: i) the first term often relates to a penalty on the control in the cost function, e.g. $0.5\mathbf{c}^\transpose \mathbf{c}$, so that $\partial \mathcal{I}/\partial \mathbf{c}=\mathbf{c}$  and ii) the contribution from the inner product of the adjoint field and the linearization of the forward system with respect to the control parameters. It is important to illustrate this last point with an example. Suppose the streamwise momentum equation had control forcing $\mathbf{c}=f(\mathbf{x},t)$, then the sensitivity would only depend on the streamwise adjoint momentum $\rho u^\dagger$; no other adjoint fields would play a role. Note that the above formulation is general for any system of equations. In the context of the Navier--Stokes equations, details of the discrete adjoint equations are found in \citet{wang2019discrete} for incompressible fluids and \citet{vishnampet2015practical,vishnampet2015exact} for compressible flows.
+
+\subsection{Sensor sensitivity in compressible flow}
+The previous formulation is now specialized for the sensitivity of wall-pressure observation to system perturbations. A similar formulation is found in \cite{wang2019spatial}. Since the focus is on sensor sensitivity to flow perturbations, the control vector $\mathbf{c}$ is not carried in the formulation in this section. \textit{Future work will consider automatically reducing a cost function by adjusting control parameters ($\mathbf{c}$), e.g. inflow disturbances, using adjoint-based sensitivity.} The cost to minimize is the discrepancy between the simulation wall pressure $p_m$ and a measurement $p_{m,tr}$
+\begin{equation}\label{eq:costp}
+%Line 1 Measurement
+\mathcal{J} = \frac{1}{2} \left[\underbrace{\mathlarger{\int}_{\mathcal{T}}\mathlarger{\int}_{\mathcal{V}} p \delta(\mathbf{x}-\mathbf{x}_m,t-t_m)\,d\mathcal{V} dt}_{=p_m} - p_{m,tr}\right]^2,
+\end{equation}
+where the delta function is applied at the measurement location in space and in time.  The pressure depends nonlinearly on the conserved variables by $p=(\gamma-1)\left[\rho E - 0.5 \rho u_i u_i \right]$.  Note that $p_m$ and $p_{m,tr}$ are scalars and $p$ is a scalar field. %\textcolor{gray!50!white}{\dbmargin{This is not needed we linearize in the follow step.}Considering infinitesimal changes in the pressure from the true state, the pressure is linearized according to $p = p_{tr}+ \partial p/\partial \mathbf{q} (\mathbf{q}-\mathbf{q}_{tr})$, which is substituting into (\ref{eq:costp})}
+%
+%\begin{equation}
+%\textcolor{gray!50!white}{\mathcal{J} = \frac{1}{2}\left[\mathlarger{\int}_{\mathcal{T}}\mathlarger{\int}_{\mathcal{V}} \frac{\partial p}{\partial \mathbf{q}}\bigg{|}_{tr}( \mathbf{q}-\mathbf{q}_{tr}) \delta(\mathbf{x}-\mathbf{x}_m,t-t_m)\,d\mathcal{V} dt\right]^2.}
+%\end{equation}
+To acquire the sensitivity with respect to flow perturbations, the variation of the cost is
+%
+\begin{equation}\label{eq:varCostP}
+\delta \mathcal{J}= \frac{\partial \mathcal{J}}{\partial \mathbf{q}} \delta \mathbf{q}= {(p_m-p_{m,tr})}\underbrace{\mathlarger{\int}_{\mathcal{T}} \mathlarger{\int}_{\mathcal{V}} \frac{\partial p}{\partial \mathbf{q}}\delta{\mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}\,d\mathcal{V} dt}_{\delta p_m}.
+\end{equation}
+Appendix~\ref{ss:directSubstitution} provides a consistent alternative derivation. There are several important points that must be discussed related to expression (\ref{eq:varCostP}):
+\begin{tcolorbox}[colback=white,sharp corners]
+\begin{enumerate}
+    \item The \textit{local} state $\mathbf{q}$ that the linearization is made needs specified. In practice of data assimilation, the optimization starts from an initial estimate $\mathbf{q}_e$ that approximately minimizes $\mathcal{J}$; and, in general, that estimate $\mathbf{q}_e \neq \mathbf{q}_{tr}$. Other research has linearized about the true state, e.g., ${p}={p}_{tr}+\partial{p}/(\partial{\mathbf{q}})_{tr}\delta p$, in order to analyze the properties of the Hessian~\citep{wang2021wall} as it relates to reconstruction difficulty. The following expressions show the linearization about the true state in the context of initial-condition sensitivity and invoking the adjoint relation for $\delta p_m$:
+    \begin{align*}
+%Line 1 Measurement
+\mathcal{J} &= \frac{1}{2} \left[\delta p_m\right]^2 = \frac{1}{2} \left[\langle \mathbf{q}^\dagger, \delta\mathbf{q}(t_i)\rangle\right]^2\\
+\frac{\partial \mathcal{J}}{\partial \delta \mathbf{q}(t_i)} &= \delta p_m \frac{ \partial p_m}{\partial \delta \mathbf{q}(t_i)} =  \langle \mathbf{q}^\dagger, \delta\mathbf{q}(t_i)\rangle\mathbf{q}^\dagger\\
+\frac{\partial^2 \mathcal{J}}{\partial \delta \mathbf{q}(t_i)\partial \delta \mathbf{q}(t_i)} &= \frac{ \partial p_m}{\partial \delta \mathbf{q}(t_i)} \frac{ \partial p_m}{\partial \delta \mathbf{q}(t_i)}+\delta p_m \cancelto{0}{\frac{ \partial^2 p_m}{\partial \delta \mathbf{q}(t_i)\partial \delta \mathbf{q}(t_i)}} =   \mathbf{q}^\dagger{\mathbf{q}^\dagger}^{\mathrm{T}}.
+\end{align*}
+At the true state $\mathbf{q}=\mathbf{q}_{tr}$, $\delta\mathbf{q}=0$, $\delta p_m=0$, which yields $\mathcal{J}=0$ and $\nabla\mathcal{J}=0$. The Hessian remains finite (as it should for a quadratic function).
+\vspace{6pt}
+    \item The cost sensitivity (\ref{eq:varCostP}) is comprised of \textit{all} flow perturbations $\delta \mathbf{q}$ which include both interior perturbations and boundary perturbations, e.g. $\delta \mathbf{q}(t_i)$. The purpose of this paper is to directly related $\delta \mathcal{J}$ to initial state perturbations $\delta \mathbf{q}(t_i)$. If, for example, sensitivity with respect to inflow perturbations is sought, the following adjoint derivation will need modified for that objective.  
+\end{enumerate}  
+\end{tcolorbox}
+Changes to the cost $\delta \mathcal{J}$ depend on two quantities: i) the current deviation from simulated observations and the true measurement and ii) perturbations to the simulated measurement $\delta p_m$ due to state perturbations. Thus, cost reduction (better matching measurements) depends on whether the current state over or under predicts the true measurement. If the model currently under-predicting, $p_m-p_{m,tr}<0$, then the change to the simulated measurement must increase $\delta_m > 0$ and vice versa. 
+
+For the remainder of this discussion,  {we focus on} $\delta p_m$ {instead of} $\delta \mathcal{J}${; the former is concerned with sensor sensitivity; and, the latter is concerned with minimizing discrepancy between a simulation and external measurements}.  As in the previous section, zero is subtracted from the integrand in (\ref{eq:varCostP})
+\begin{equation}
+\delta p_m= \mathlarger{\int}_{\mathcal{T}} \mathlarger{\int}_{\mathcal{V}} \left[\frac{\partial p}{\partial \mathbf{q}}\delta{\mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}-0\right]\,d\mathcal{V} dt,
+\end{equation}
+and the governing equations are used, i.e., $0=\mathbf{q}^\dagger \partial \mathcal{N}/\partial \mathbf{q} \delta \mathbf{q}$, yielding
+\begin{equation}\label{eq:varCostPgovEq}
+\delta p_m= \mathlarger{\int}_{\mathcal{T}} \mathlarger{\int}_{\mathcal{V}} \left[\frac{\partial p}{\partial \mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}-\mathbf{q}^\dagger \frac{\partial \mathcal{N}}{\partial \mathbf{q}} \right]\delta{\mathbf{q}}\,d\mathcal{V} dt.
+\end{equation}
+Using integration by parts on (\ref{eq:varCostPgovEq}),
+\begin{align}\label{eq:varCostPgovEqIBP}
+\delta p_m=& \mathlarger{\int}_{\mathcal{T}} \mathlarger{\int}_{\mathcal{V}} \left[\frac{\partial p}{\partial \mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}+\mathcal{N}^\dagger \mathbf{q}^\dagger \right]\delta{\mathbf{q}}\,d\mathcal{V} dt\\\nonumber
++& \mathlarger{\int}_{\mathcal{V}} [\mathbf{q}^\dagger(\mathbf{x},t_i)^{^\transpose} \delta{\mathbf{q}}(\mathbf{x},t_i)-\mathbf{q}^\dagger(\mathbf{x},t_m)^{^\transpose} \delta{\mathbf{q}}(\mathbf{x},t_m)]\,d\mathcal{V}\\\nonumber
+-&\Omega[\mathbf{q}^\dagger,\delta \mathbf{q}],
+\end{align}
+the adjoint vector field must solve
+\begin{equation}\label{eq:adjPressure}
+    \mathcal{N}^\dagger \mathbf{q}^\dagger=-\underbrace{\frac{\partial p}{\partial \mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}}_{\text{measurement kernel}},
+\end{equation}
+in order to eliminate the problematic term related to $\delta \mathbf{q}$ on line one in (\ref{eq:varCostPgovEqIBP}).  To eliminate the remaining terms in lines two and three in (\ref{eq:varCostPgovEqIBP}), $\mathbf{q}^\dagger(t_m)=0$ and the spatial boundary terms must also vanish $\Omega=0$. \textit{So, what mechanism induces the adjoint evolution?} The measurement kernel, which means that the adjoint solution is specific to the measurement modality, e.g. PCBs, schlieren, temperature sensitive paint, etc. Also note that the solution to the adjoint system (\ref{eq:adjPressure}) for a discrete measurement, i.e. a space-time impulse, can also be interpreted as a Green's function, where a linear system is forced by a delta function (see \citet{greenberg2015applications}). Finally, the adjoint $\mathbf{q}^\dagger$ solving (\ref{eq:adjPressure}) furnishes a direct relationship between an initial perturbation field and measurement perturbations, using the remaining terms in (\ref{eq:varCostPgovEqIBP}),
+\begin{equation}\label{eq:predictdp}
+\tcbhighmath[drop fuzzy shadow]{\delta p_m = \mathlarger{\int}_{\mathcal{V}} \boxedeqn{\mathbf{q}^\dagger(\mathbf{x},t_i)^{^\transpose}}{} \delta \mathbf{q}(\mathbf{x},t_i) d\mathcal{V}.}
+\end{equation}
+The following sections verify this relationship in the context of a wall pressure measurement beneath a hypersonic boundary layer. Appendix~\ref{app:compact} recapitulates this derivation in a more compact notation.
+
+
+
+
+%\begin{equation}
+    %\frac{\partial \mathcal{I}}{\partial %\mathbf{q}} = \frac{\partial p}{\partial %\mathbf{q}} %\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)
+%\end{equation}
+
+
+
+\section{Simulation configuration}\label{s:example}
+The following section will determine wall-pressure sensor sensitivity in the context of a Mach 4.5 boundary layer. Figure~\ref{fig:schematic} shows the generic flow configuration and table~\ref{tab:config} lists specific parameters.  The initial condition is a laminar self-similar Blasius boundary layer.  Both two-dimensional and three-dimensional cases have been computed and verified; however, the current results are shown for the 2D case.  Separate verification of the forward evolution has been previously done and will not be explained here. Instead, the focus here is verifying sensor sensitivity.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{./figures/configuration-adjoint-test.pdf}
+    \caption{Simulation schematic of Mach 4.5 flow over a flat isothermal plate.}
+    \label{fig:schematic}
+\end{figure}
+
+\begin{table}\label{ref:tableError}
+\begin{center}
+\begin{tabular}{c c c c c c  }
+Simulation & $M$ & $\sqrt{Re_{x,0}}$ & $\sqrt{Re_{x,s}}$ & $(L_x,L_y,L_z)$ & $(N_x,N_y,N_z)$\\\hline
+2D & 4.5 & 1800 & 1900 & $(300,200)$ & $(200,200)$\\
+3D & 4.5 & 1800 & 1900 & $(300,200,50)$ & $(200,200,36)$\\
+\hline 
+\end{tabular}
+\end{center}
+\caption{Configuration and simulation parameters.}
+\label{tab:config}
+\end{table} 
+
+Figure~\ref{fig:viz}(a-f) shows the evolution of the adjoint energy $\rho E^\dagger$ driven from an impulse at $(\sqrt{Re_x},y)=(1900,0)$. The adjoint solution is comprised of $\mathbf{q}^\dagger=[\rho^\dagger, \rho u^\dagger, \rho v^\dagger, \rho E^\dagger]$; only the latter component is shown for brevity. At instance (b), the adjoint sensitivity emerges from the wall near the sensor location. There are two important observations: i) in frames (c-f), a curved wave emerges from the boundary-layer region and radiates to the left above the boundary layer; and, ii) a wavepacket structure remains in the boundary layer concentrated near the edge ($y\approx 13$). \textit{What do these observations mean for sensor sensitivity?} Consider adding a perturbation to the field $\mathbf{q}_0+\delta \mathbf{q}$ at time $t=0 (\tau=t_m)$, the coloured field indicates what will happen at the sensor location at time $t=t_m (\tau=0)$.  For example, panel (f) shows the potential of free-stream disturbances to influence the sensor by adding disturbances on the curved wave about the BL where $|\rho E^\dagger|>0$. However, if the field is perturbed in the light gray region where $\mathbf{q}^\dagger=0$, then no change in the measure will occur.  Another observation which is less surprising is that the sensor is sensitive to boundary-layer perturbations, mainly nearly the bl edge.  Figure~\ref{fig:viz}(g-l) illustrate how a disturbance added at $t=0$ (g) evolves and eventually influences the sensor at $t=t_m$ (l).  Notice its influence appears to be strong.  Figure~\ref{fig:trace} shows the wall pressure perturbation from (l). The sensitivity analysis is focused on how a discrete space-time measurement (indicated by a symbol in (\ref{fig:trace}) can increase or decrease.  A quantitative verification of the formulation will be given in the following section but we notice from the adjoint forcing in figure~\ref{fig:viz}, that the adjoint field has encoded the proper information to directly influence the sensor at $(\mathbf{x},t)=(\mathbf{x}_m,t_m)$.  \textit{Instead of $\delta p_m > 0$, how can the sensor measurement be decreased?}. Recall, the adjoint is linear and represents a tangent approximation $\delta \mathcal{J}$. The adjoint can be used to increase $\mathcal{J}$ or decrease $\mathcal{J}$ by deciding to `walk up' or `walk down' the slope. So, instead of considering $\delta \mathbf{q}=\mathbf{q}^\dagger$, perturbations  $\delta\mathbf{q}=-\mathbf{q}^\dagger$ will reproduce the same contour levels in figure~\ref{fig:viz}(g-l), but the colors will be reversed. A strong negative perturbation (blue) will thus be above the sensor.  \textit{We leave this as a future exercise for the interested practitioner.}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\textwidth]{./figures/fig-adjoint-visualization-1900.pdf}
+    \caption{(a-f) Evolution of adjoint energy with contours $-2.5\times10^{-6}~\text{(blue)}\leq \rho E^\dagger\leq 2.5\times10^{-6}~\text{(red)}$ superimposed on temperature $2.5~\text{(light gray)}\leq T\leq 10~\text{(black)}$ from $t=[t_m,0]$ ($\tau=[0,t_m]$). (g-l) Evolution of pressure disturbance with contours $-0.01~\text{(blue)}\leq \delta p_m\leq 0.01~\text{(red)}$ due to $\delta \mathbf{q}=\mathbf{q}^\dagger(t=0)$ from $t=[0,t_m]$.\vspace{6pt} }
+    \label{fig:viz}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{./figures/fig-verify-adjoint-2D-trace.pdf}
+    \caption{Wall pressure perturbation at $t=t_m$ due to $\delta \mathbf{q}=\mathbf{q}^\dagger(t=0)$.\vspace{6pt} }
+    \label{fig:trace}
+\end{figure}
+
+\section{Verification}\label{s:verify}
+The following section verifies the forward-adjoint relationship in the context of the aforementioned example. There are at least two methods to verify the adjoint-forward relationship: i) directly, by using a linearized forward solver and ii) approximately, by using a nonlinear forward solver. Here, we consider the latter. The purpose of this test is to verify that wall observations due to perturbed initial conditions converge to the adjoint-based predictions to within machine round off. The error is formulated by considering a Taylor-series expansion of the wall measurement
+\begin{equation}
+    p_m (\mathbf{q}+\delta\mathbf{q},t_m)=p_m(\mathbf{q},t_m) + \frac{\partial p_m}{\partial \mathbf{q}} \delta \mathbf{q} + O(||\delta \mathbf{q}||^2),
+\end{equation}
+and re-expressing the first-order factor in terms of the measurement kernel yields
+\begin{equation}
+    p_m (\mathbf{q}+\delta\mathbf{q},t_m)=p_m(\mathbf{q},t_m) + \mathlarger{\int}_{\mathcal{T}} \mathlarger{\int}_{\mathcal{V}} \frac{\partial p}{\partial \mathbf{q}}\delta{\mathbf{q}} \boxedeqn{\delta(\mathbf{x}-\mathbf{x}_m,t-t_m)}{a}\,d\mathcal{V} dt + O(||\delta \mathbf{q}||^2).
+\end{equation}
+Using the equivalence of (\ref{eq:varCostP}) and (\ref{eq:predictdp}), gives
+\begin{equation}\label{eq:genError}
+    p_m (\mathbf{q}+\delta\mathbf{q},t_m)=p_m(\mathbf{q},t_m) + {\mathlarger{\int}}_{\!\!\!\!\mathcal{V}} \mathbf{q}^\dagger(t_i)^{\!\mathrm{T}} \delta{\mathbf{q}}(t_i)\,d\mathcal{V} + O(||\delta \mathbf{q}||^2)
+\end{equation}
+which is general for any $\delta \mathbf{q}(t_i)$.  \textit{Any kind of perturbation is allowable.} Perturbations can be acoustic, vortical, entropic or a mixture of these; and, they can also be added anywhere in the flow. For example, perturbations can be added where there is no sensitivity, e.g., $\mathbf{q}^\dagger(\mathbf{x})=0$, which will theoretically yield no change in the measurement ($\delta p_m =0$).  Another choice would be to select flow perturbations to be proportional to the entire adjoint field, which is a special case. In fact, this case is the optimal perturbation, in the linear sense, to have the most significant measurement response. All other perturbations with the same energy will have a weaker influence on the sensor (see Qi Wang's transient growth perspective). Figure~\ref{fig:viz}(g-l) shows the evolution of this optimal disturbance on the pressure field. \textit{Demonstrating the forward evolution with different $\delta \mathbf{q}$ is left as a future exercise.} For purposes of verifying the adjoint we consider perturbation $\delta \mathbf{q}(t_i)=\alpha \mathbf{q}^\dagger(t_i)$ in (\ref{eq:genError}) which yields the following error measure  
+\begin{equation}\label{eq:error:FD}
+\tcbhighmath[drop fuzzy shadow]{\epsilon \equiv\left| \frac{p_m (\mathbf{q}+\delta\mathbf{q},t_m)-p_m(\mathbf{q},t_m)}{\alpha}-{\mathlarger{\int}}_{\!\!\!\!\mathcal{V}} \mathbf{q}^\dagger(t_i)^{\!\mathrm{T}} {\mathbf{q}}^\dagger(t_i)\,d\mathcal{V}\right|=O(\alpha).}
+\end{equation}
+Similar error measures are used in \cite{vishnampet2015practical,buchta2016discrete}. The methodology for calculating $\epsilon$, which requires multiple forward calculations, is provided in algorithm \ref{alg:forwardadjoint}. Figure~\ref{fig:error:FD}(a) compares the pressure perturbation at $(\mathbf{x}_m,t_m)$ between the adjoint prediction (dashed) and the brute-force method (symbol); (b) shows the convergence behavior of $\epsilon$. For large $\alpha$, the error is not $\propto \alpha$ due to nonlinearity, i.e.,violating the tangent approximation.  Like other assessments of gradient accuracy~\cite{vishnampet2015practical,buchta2016discrete,wang2019discrete}, the error reduces with perturbation strength, reaches a minimum, and then increases due to machine round-off effects.  
+
+An important question: \textit{How does a discrepancy, e.g, implementation error, manifest in $\epsilon(\alpha)$?}  Experience shows that $\epsilon$ will become independent of $\alpha$ indicating a systematic error in the formulation, implementation, or a mixture of both.  As such, $\epsilon$ will show a horizontal trend over some region of $\alpha$. This is demonstrated in figure~\ref{fig:error:FD}(b) where the spatial order of accuracy was intentionally set to be inconsistent between the adjoint and forward solvers: $4^{\text{th}}$-order for the adjoint solution and $6^{\text{th}}$-order for the perturbed solutions. Thus, we expect convergence to be degraded as is observed. 
+\begin{minipage}{1\textwidth}
+\begin{algorithm}[H]
+\SetAlgoLined
+%\begin{itemize}
+\KwInput{Number of forward perturbed states $N_p$}
+Acquire the forward state that solves $\mathcal{N}(\mathbf{q})$\\
+Extract the measurement $p_m=\mathcal{M}(\mathbf{q})$\\
+Acquire the adjoint state ($\mathbf{q}^\dagger$) that solves $\mathcal{N}^\dagger(\mathbf{q}^\dagger,\mathbf{q})=f(\mathbf{x}_s,t_s)$\\
+% \end{itemize}
+Set the initial perturbation strength $\alpha_0$ for $i=0$\\
+ \While{$i\leq N_p$}{
+  Perturb the initial state with the adjoint $\mathbf{q}^{(i)}_o=\mathbf{q}_o+\alpha\delta\mathbf{q}$, e.g. $\delta\mathbf{q}=\mathbf{q}_f^\dagger$ \\
+  Acquire the forward state that solves $\mathcal{N}(\mathbf{q}^{(i)})$\\
+  Extract the measurement $p_m^{(i)}=\mathcal{M}(\mathbf{q}^{(i)})$\\
+  Compute the error $\epsilon_i$ in expression (\ref{eq:error:FD})\\
+  Reduce the perturbation strength, e.g.,  $\alpha_{i+1}=\alpha_i/(10^{i+1})$\\
+  $i=i+1$
+   %}
+   %{
+   %\KwResult{Optimal inflow amplitudes and phases %$\mathbf{c}_{i}=\mathbf{c}_{\mathrm{opt}}$}
+  %}
+ }
+ \KwResult{$\epsilon(\alpha)$}
+\caption{Verification of forward-adjoint relationship with a nonlinear solver}
+ \label{alg:forwardadjoint}
+\end{algorithm}
+\end{minipage}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\textwidth]{./figures/fig-verify-adjoint-2D.pdf}
+    \caption{(a) Predicted ($\delta p_m$ from \ref{eq:predictdp}) and measured, $p_m(\mathbf{q}+\delta \mathbf{q})-p_m(\mathbf{q})$,  wall pressure perturbation. The inset shows the region of intense perturbation. (b) Accuracy of adjoint v. finite-differencing of the forward evolution using (\ref{eq:error:FD}). For the \textit{inconsistent} curve the order of accuracy for the spatial derivatives was intentionally set fourth order for the adjoint and sixth order for the forward perturbed states.\vspace{3pt}  }
+    \label{fig:error:FD}
+\end{figure}
+\FloatBarrier
+
+\pagebreak
+\appendix
+\section{Sensor sensitivity: \\Compact notation (Buchta, Wang, \& Zaki excerpt)}\label{app:compact}
+Typical data assimilation methods start by defining a cost function to minimize. The cost quantifies the deviation between the model observation $\mathcal{M}(\mathbf{q})$ and the measurement $m$ by
+\begin{equation}\label{eq:cost}
+\mathcal{J} = \frac{1}{2} [\mathcal{M}(\mathbf{q})-m]^2,
+\end{equation}
+where the operator $\mathcal{M}(\mathbf{q})$, projects the model solution $\mathbf{q}$ to the measurement space by
+%e.g. $\mathbf{q}=[\rho, u, v, w, p]^\mathrm{T}$, to the measurement space. In this case, the projection operator for the wall pressure is
+\begin{equation}
+\mathcal{M}(\mathbf{q}) = \int_\mathcal{\mathcal{T}} \int_\mathcal{V}  \mathbf{M}^H {\mathbf{W}}\mathbf{q} \,d\mathcal{V}d\mathcal{T} =\langle \mathbf{M}, \mathbf{q} \rangle.
+\end{equation}
+The measurement kernel $\mathbf{M}$, e.g. $[0,0,\ldots,\delta(\mathbf{x}-\mathbf{x}_m)\delta(t-t_m)]^{\mathrm{T}}$ %when $\mathbf{q}=[\rho, \mathbf{u}, p]^{\mathrm{T}}$,    %$\mathbf{M}=[0, 0, 0, 0, 1]^H \delta(\mathbf{x}-\mathbf{x}_m)\delta(t-t_m)$ acquires pressure at
+acquires the measurement of the last element in the state vector field at the location $x_m$ and time $t_m$ within the space domain $\mathcal{V}$ and time domain $\mathcal{T}$. Data assimilation techniques proceed by differentiating $\mathcal{J}$ with respect to control parameters $\mathbf{c}$, and seek a stationary point $\nabla_{\mathbf{c}} \mathcal{J}=0$. These approaches have been successful in identifying unknown control parameters to improve accuracy of predictions in low-speed \citep{wang2019spatial, wang2019discrete,wang_zaki_2021} and high-speed flows \citep{buchta_zaki_2021}; yet, the description of how wall measurements are sensitive to general flow perturbations ($\delta \mathbf{q}$) is incomplete.  In order to address this knowledge gap, we consider a modified cost function near the true solution $\mathbf{q}_e$: 
+\begin{equation}\label{eq:cost:expanded}
+\widetilde{\mathcal{J}} =\frac{1}{2}\left[
+\langle \mathbf{M},\mathbf{q}_e \rangle + \langle \mathbf{M},\delta \mathbf{q} \rangle  - m\right]^2 = \frac{1}{2}\left[
+\langle \mathbf{M},\delta \mathbf{q} \rangle \right]^2.
+\end{equation}
+The term $\langle \mathbf{M}, \delta \mathbf{q} \rangle$, which we denote $\delta m$, represents how flow perturbations augment the simulated observation. 
+The $\delta \mathbf{q}$ at the measurement, evolved from an earlier perturbed state by $\delta \mathbf{q} = \mathbf{L} \delta \mathbf{q}_0$. We observe that the quantity $\langle \mathbf{M}, \mathbf{L} \delta \mathbf{q}_0 \rangle$ is problematic because each $\delta \mathbf{q}_0$ requires a separate simulation to compute its consequence on the forward state and on the corresponding measurement. 
+To remove this complication, we exploit the adjoint of the forward system. The adjoint field $\mathbf{q}^\dagger$ is introduced to $\delta m$ by the following:
+\begin{equation}\label{eq:adjoint:m}
+   \delta{m} =  \langle \mathbf{M},  \delta \mathbf{q}  \rangle - \langle \mathbf{q}^\dagger, \mathbf{N} \delta \mathbf{q}\rangle,
+\end{equation}
+where the second term is zero because $\delta \mathbf{q}$ must solve the conservation equations,~\mbox{$\mathbf{N}\delta\mathbf{q}=0$}. 
+In the limit of small perturbation, using integration by parts, the second term in (\ref{eq:adjoint:m}) is 
+\begin{equation}\label{eq:ibp}
+\langle \mathbf{q}^\dagger, \mathbf{N} \delta \mathbf{q}\rangle = -\langle \mathbf{N}^\dagger\mathbf{q}^\dagger, \delta \mathbf{q}\rangle + \langle\mathbf{q}_i^\dagger,\mathbf{q}_i\rangle|_{i=0}^{m} + \Omega(\mathbf{q}^\dagger, \delta\mathbf{q}) + O(\delta \mathbf{q}^2)
+\end{equation}
+$\mathbf{N}^\dagger$ is the adjoint operator of the primal linearized system ($\mathbf{N}$) and the final two terms represent temporal and spatial boundary conditions which will discussed later. 
+If we ignore the higher-order perturbations, with (\ref{eq:ibp}) the change in the measurement is
+\begin{equation}\label{eq:adjoint:m:ibp}
+   \delta m =  \langle \mathbf{N}^\dagger\mathbf{q}^\dagger+\mathbf{M},  \mathbf{L}\delta \mathbf{q}_0  \rangle -\langle\mathbf{q}_i^\dagger,\mathbf{q}_i\rangle|_{i=0}^{m} - \Omega(\mathbf{q}^\dagger, \delta \mathbf{q}).
+\end{equation}
+We require the adjoint field solves $\mathbf{N}^\dagger\mathbf{q}^\dagger+\mathbf{M}=0$ which mitigates the burden of obtaining $\mathbf{L}\delta \mathbf{q}_0$ in (\ref{eq:adjoint:m:ibp}). 
+Consequently, the direct relationship between $\delta m$ and $\delta \mathbf{q}_0$ is
+\begin{equation} \label{eq:dm:dqo}
+    \delta m=\langle \mathbf{q}_0^\dagger, \delta \mathbf{q}_0\rangle.
+\end{equation}
+The remaining adjoint boundary conditions were selected to ensure $\Omega=0$ and $\mathbf{q}^\dagger_m=0$.  
+
+%The previous assessment used a delta function to represent the sensor.  Thus, the initial adjoint field is subject to excessive dissipation since it is not resolved on the mesh.  Despite these effects, the gradient maintains discrete exactness because the adjoint formulation is based on the discretized forward problem accounting for any and all dissipation effects.  When assessing physical sensitivity with respect to the initial pulse energy, it may be important to ensure the measurement is represented on the mesh.  
+
+%\section{Other illustrations (for fun)}
+%The example in \S2 is related to a discrete wall pressure measurements.  The formulation however is general and can be applied to more general settings.  In the following example, we consider the domain of dependence from spatial temperature measurements in an observation window downstream of a shock wave.  The domain of the dependence will indicate how pre-shock disturbances are distorted by the shock wave, which has implications on hypersonic flight and cryptography.  Adjoint looping can be preformed to decipher the original signal encoded in the measured temperature window which we leave for future work.
+
+\section{Find $\delta \mathcal{J}$ by direct substitution}\label{ss:directSubstitution}
+This section provides a complementary derivation of $\delta \mathcal{J}$ in (\ref{eq:varCostP}) using 
+\begin{equation}
+\delta \mathcal{J} = \mathcal{J}(\mathbf{q}+\delta\mathbf{q})-\mathcal{J}(\mathbf{q})
+\end{equation}
+Substituting the cost function for a wall pressure measurement in (\ref{eq:costp}) yields
+\begin{align}
+\delta\mathcal{J} = &\frac{1}{2} \left[\underbrace{\mathlarger{\int}_{\mathcal{T}}\mathlarger{\int}_{\mathcal{V}} (p+\delta p) \delta(\mathbf{x}-\mathbf{x}_m,t-t_m)\,d\mathcal{V} dt}_{=p_m+\delta p_m} - p_{m,tr}\right]^2\\
+&-\frac{1}{2} \left[\underbrace{\mathlarger{\int}_{\mathcal{T}}\mathlarger{\int}_{\mathcal{V}} p \delta(\mathbf{x}-\mathbf{x}_m,t-t_m)\,d\mathcal{V} dt}_{=p_m} - p_{m,tr}\right]^2.
+\end{align}
+Expand the previous expression and simplify:
+\begin{align}
+\delta \mathcal{J}=&\frac{1}{2}(p_m + \delta p_m - p_{m,tr})^2 - \frac{1}{2}(p_m  - p_{m,tr})^2\\
+=&\frac{1}{2}\left[p_m^2 + \cancelto{\text{H.O.T} (=0)}{\delta p_m^2} + p_{m,tr}^2+2p_m \delta p_m - 2\delta p_m p_{m,tr}-2 p_m p_{m,tr} \right]\\\nonumber
+-&\frac{1}{2}\left[p_m^2 - 2p_m p_{m,tr} + p_{m,tr}^2 \right].
+\end{align}
+The remaining terms
+\begin{equation}
+   \delta \mathcal{J}=\delta p_m(p_m - p_{m,tr}) 
+\end{equation}
+are consistent with (\ref{eq:varCostP}).

@@ -1,0 +1,11 @@
+\nomenclatureentry{01$\mathcal{J}$@[{$\mathcal{J}$}]\begingroup `engineering' objective function\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{02$\mathcal{L}$@[{$\mathcal{L}$}]\begingroup neural network objective function\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{03$u$@[{$u$}]\begingroup forward state\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{04$u^\dagger$@[{$u^\dagger$}]\begingroup adjoint state\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{05$f$@[{$f$}]\begingroup neural network approximation of forward state\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{06$f^\dagger$@[{$f^\dagger$}]\begingroup neural network approximation of forward state\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{07$\mathcal{M}$@[{$\mathcal{M}$}]\begingroup forward conservation equations\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{08$\mathcal{M}^\dagger$@[{$\mathcal{M}^\dagger$}]\begingroup adjoint equations\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{09$\theta$@[{$\theta$}]\begingroup forward neural network weights\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{09$\theta^\dagger$@[{$\theta^\dagger$}]\begingroup adjoint neural network weights\nomeqref {0.0}|nompageref}{1}
+\nomenclatureentry{10$||\cdot||$@[{$||\cdot||$}]\begingroup L2 norm\nomeqref {0.0}|nompageref}{1}
