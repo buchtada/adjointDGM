@@ -50,6 +50,89 @@ The objective is to identify initial perturbations that maximize final state ene
 - `doc/manuscript/` - LaTeX manuscript and compiled PDF
 - `doc/manuscript/figures/` - Publication-ready figures
 - `doc/references.bib` - Bibliography with 50+ academic references
+- `DGM.py` - Deep Galerkin Method neural network implementation
+- `train_adjoint_advdiff.py` - Main training script for AFDGM
+- `validate_solution.py` - Validation script comparing NN with finite difference
+- `requirements.txt` - Python package dependencies
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/buchtada/adjointDGM.git
+cd adjointDGM
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Training the Model
+
+Run the training script to solve the forward and adjoint advection-diffusion equations:
+
+```bash
+python train_adjoint_advdiff.py
+```
+
+Optional arguments:
+```bash
+python train_adjoint_advdiff.py \
+    --sampling_stages 2000 \
+    --steps_per_sample 10 \
+    --learning_rate 1e-4 \
+    --output_dir ./output/
+```
+
+This will:
+- Train two neural networks (forward and adjoint)
+- Save loss evolution plots
+- Save solution fields (forward and adjoint)
+- Output training progress to console
+
+**Outputs** (saved to `./output/`):
+- `loss_data.npy` - Training loss history
+- `forward_solution.npy` - Forward solution u(x,t)
+- `adjoint_solution.npy` - Adjoint solution u†(x,t)
+- `x_mesh.npy`, `t_mesh.npy` - Spatial and temporal grids
+- `loss_evolution.png` - Loss curves during training
+- `solutions.png` - Visualization of u and u†
+
+### Validating the Solution
+
+After training, validate the neural network solution against finite difference:
+
+```bash
+python validate_solution.py
+```
+
+Optional arguments:
+```bash
+python validate_solution.py \
+    --output_dir ./output/ \
+    --nx 100 \
+    --nt 200
+```
+
+This will:
+- Solve forward and adjoint PDEs using 4th-order Runge-Kutta
+- Compare NN solution with finite difference
+- Compute error metrics (L2, max error)
+- Perform gradient accuracy assessment via Taylor series test
+- Generate validation plots
+
+**Outputs** (saved to `./output/`):
+- `validation_comparison.png` - Side-by-side comparison of NN vs FD
+- `gradient_accuracy.png` - Taylor series gradient verification
+
+### Quick Start
+
+```bash
+# Full workflow
+python train_adjoint_advdiff.py --sampling_stages 1000
+python validate_solution.py
+```
 
 ## Documentation
 
@@ -58,6 +141,20 @@ The main manuscript (`doc/manuscript/dgmaf.pdf`) contains:
 - Accuracy assessment via Taylor series analysis
 - Comparison with finite-difference methods
 - Gradient accuracy evaluation
+
+## Algorithm Details
+
+**Neural Network Architecture:**
+- LSTM-like layers with gating mechanisms
+- 3 hidden layers, 50 nodes per layer
+- Xavier initialization
+- Adam optimizer with learning rate decay
+
+**Training Strategy:**
+- Simultaneous training of forward and adjoint networks
+- Random sampling of space-time collocation points
+- Periodic resampling to ensure coverage
+- Learning rate decay every 500 epochs
 
 ## Author
 
